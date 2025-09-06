@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Perbandingan & Evaluasi Universal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --light-color: #f8f9fa;
+            --warning-color: #ff9e00;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .option-card, .criteria-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .option-header, .criteria-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .option-title, .criteria-title {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .results-section {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .comparison-table {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        .conclusion-card {
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .badge-recommended {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        .custom-toast {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            min-width: 300px;
+        }
+        
+        .toast-success {
+            border-left: 4px solid #2b8a3e;
+        }
+        
+        .toast-error {
+            border-left: 4px solid #e63946;
+        }
+        
+        .toast-icon {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+        
+        .toast-success .toast-icon {
+            color: #2b8a3e;
+        }
+        
+        .toast-error .toast-icon {
+            color: #e63946;
+        }
+        
+        .criteria-weight {
+            width: 80px;
+        }
+        
+        .criteria-direction {
+            width: auto;
+        }
+        
+        .nav-tabs {
+            margin-bottom: 1rem;
+        }
+        
+        .tab-pane {
+            padding: 1rem;
+        }
+        
+        .radar-chart-container {
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .score-badge {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .criteria-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .criteria-input-group input, .criteria-input-group select {
+            margin-right: 0.5rem;
+        }
+        
+        .option-criteria-values {
+            margin-top: 1rem;
+        }
+        
+        .criteria-value-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .criteria-value-label {
+            width: 150px;
+            font-weight: 500;
+        }
+        
+        .criteria-value-input {
+            flex: 1;
+        }
+        
+        .criteria-value-direction {
+            margin-left: 10px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-0"><i class="bi bi-bar-chart-line me-2"></i>Generator Perbandingan & Evaluasi Universal</h1>
+            <p class="lead mb-0">Alat bantu pengambilan keputusan bisnis yang fleksibel untuk semua jenis permasalahan</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Input Data Perbandingan</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="comparisonForm">
+                            <div class="mb-4">
+                                <label for="title" class="form-label fw-bold">Judul Pemilihan</label>
+                                <input type="text" class="form-control form-control-lg" id="title" placeholder="Contoh: Pemilihan Vendor Cloud Service">
+                            </div>
+                            
+                            <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="criteria-tab" data-bs-toggle="tab" data-bs-target="#criteria" type="button" role="tab" aria-selected="true">Kriteria Penilaian</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="options-tab" data-bs-toggle="tab" data-bs-target="#options" type="button" role="tab" aria-selected="false">Opsi Pilihan</button>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content" id="inputTabsContent">
+                                <div class="tab-pane fade show active" id="criteria" role="tabpanel">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="mb-0 fw-bold">Kriteria Penilaian</h5>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" id="addCriteriaBtn">
+                                                <i class="bi bi-plus-circle me-1"></i>Tambah Kriteria
+                                            </button>
+                                        </div>
+                                        
+                                        <div id="criteriaContainer">
+                                            <!-- Kriteria default akan ditambahkan di sini dengan JavaScript -->
+                                        </div>
+                                        
+                                        <div class="alert alert-info mt-3">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            <strong>Tips:</strong> Tentukan kriteria yang penting untuk keputusan Anda. Beri bobot lebih tinggi untuk kriteria yang lebih penting.
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="options" role="tabpanel">
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="mb-0 fw-bold">Opsi Pilihan</h5>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" id="addOptionBtn">
+                                                <i class="bi bi-plus-circle me-1"></i>Tambah Opsi
+                                            </button>
+                                        </div>
+                                        
+                                        <div id="optionsContainer">
+                                            <!-- Opsi default akan ditambahkan di sini dengan JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-arrow-right-circle me-2"></i>Buat Perbandingan!
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="results-section" id="resultsSection">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-table me-2"></i>Hasil Perbandingan</h4>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0" id="comparisonTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Opsi</th>
+                                            <!-- Header kriteria akan ditambahkan dinamis -->
+                                            <th>Total Skor</th>
+                                            <th>Ranking</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="comparisonTableBody">
+                                        <!-- Data tabel akan ditambahkan di sini dengan JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="bi bi-graph-up me-2"></i>Visualisasi Perbandingan</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="radar-chart-container">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="conclusion-card" id="conclusionCard">
+                        <h4 class="mb-3"><i class="bi bi-lightbulb me-2"></i>Kesimpulan & Rekomendasi</h4>
+                        <div id="conclusionContent">
+                            <!-- Konten kesimpulan akan ditambahkan di sini dengan JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" class="btn btn-success" id="exportBtn">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Export ke Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inisialisasi dengan kriteria dan opsi default
+            addCriteria('Harga', 'numerik', 'lower', 30);
+            addCriteria('Kualitas', 'teks', 'higher', 40);
+            addCriteria('Waktu Pengerjaan', 'numerik', 'lower', 30);
+            
+            addOption();
+            addOption();
+            
+            // Event listener untuk tombol tambah kriteria
+            document.getElementById('addCriteriaBtn').addEventListener('click', () => {
+                addCriteria();
+            });
+            
+            // Event listener untuk tombol tambah opsi
+            document.getElementById('addOptionBtn').addEventListener('click', addOption);
+            
+            // Event listener untuk form submission
+            document.getElementById('comparisonForm').addEventListener('submit', handleFormSubmit);
+            
+            // Event listener untuk tombol export
+            document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+        });
+        
+        // Counter untuk kriteria dan opsi
+        let criteriaCounter = 0;
+        let optionCounter = 0;
+        
+        // Fungsi untuk menambah kriteria baru
+        function addCriteria(name = '', type = 'numerik', direction = 'higher', weight = 10) {
+            criteriaCounter++;
+            const criteriaContainer = document.getElementById('criteriaContainer');
+            
+            const criteriaCard = document.createElement('div');
+            criteriaCard.className = 'criteria-card';
+            criteriaCard.id = `criteria-${criteriaCounter}`;
+            
+            criteriaCard.innerHTML = `
+                <div class="criteria-header">
+                    <span class="criteria-title">Kriteria ${criteriaCounter}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCriteria(${criteriaCounter})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nama Kriteria</label>
+                    <input type="text" class="form-control criteria-name" value="${name}" placeholder="Contoh: Harga" required>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipe</label>
+                        <select class="form-select criteria-type">
+                            <option value="numerik" ${type === 'numerik' ? 'selected' : ''}>Numerik</option>
+                            <option value="teks" ${type === 'teks' ? 'selected' : ''}>Deskripsi Teks</option>
+                            <option value="pilihan" ${type === 'pilihan' ? 'selected' : ''}>Pilihan (1-5)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Arah Penilaian</label>
+                        <select class="form-select criteria-direction">
+                            <option value="higher" ${direction === 'higher' ? 'selected' : ''}>Semakin Tinggi Semakin Baik</option>
+                            <option value="lower" ${direction === 'lower' ? 'selected' : ''}>Semakin Rendah Semakin Baik</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Bobot (%)</label>
+                        <input type="number" class="form-control criteria-weight" value="${weight}" min="1" max="100" required>
+                    </div>
+                </div>
+            `;
+            
+            criteriaContainer.appendChild(criteriaCard);
+            
+            // Update opsi untuk menambah input untuk kriteria baru ini
+            updateOptionsForNewCriteria();
+        }
+        
+        // Fungsi untuk menghapus kriteria
+        function removeCriteria(id) {
+            const criteriaCard = document.getElementById(`criteria-${id}`);
+            if (criteriaCard) {
+                criteriaCard.remove();
+            }
+            
+            // Periksa apakah masih ada kriteria tersisa
+            const remainingCriteria = document.querySelectorAll('.criteria-card');
+            if (remainingCriteria.length === 0) {
+                addCriteria(); // Minimal harus ada satu kriteria
+            }
+            
+            // Update opsi untuk menghapus input untuk kriteria ini
+            updateOptionsAfterCriteriaRemoved();
+        }
+        
+        // Fungsi untuk menambah opsi baru
+        function addOption() {
+            optionCounter++;
+            const optionsContainer = document.getElementById('optionsContainer');
+            
+            const optionCard = document.createElement('div');
+            optionCard.className = 'option-card';
+            optionCard.id = `option-${optionCounter}`;
+            
+            optionCard.innerHTML = `
+                <div class="option-header">
+                    <span class="option-title">Opsi ${String.fromCharCode(64 + optionCounter)}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOption(${optionCounter})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nama Opsi</label>
+                    <input type="text" class="form-control option-name" placeholder="Contoh: Vendor A" required>
+                </div>
+                <div class="option-criteria-values" id="option-${optionCounter}-criteria">
+                    <!-- Input untuk kriteria akan ditambahkan di sini -->
+                </div>
+            `;
+            
+            optionsContainer.appendChild(optionCard);
+            
+            // Tambahkan input untuk setiap kriteria yang ada
+            updateOptionCriteriaInputs(optionCounter);
+        }
+        
+        // Fungsi untuk menghapus opsi
+        function removeOption(id) {
+            const optionCard = document.getElementById(`option-${id}`);
+            if (optionCard) {
+                optionCard.remove();
+            }
+            
+            // Periksa apakah masih ada opsi tersisa
+            const remainingOptions = document.querySelectorAll('.option-card');
+            if (remainingOptions.length === 0) {
+                addOption(); // Minimal harus ada satu opsi
+            }
+        }
+        
+        // Fungsi untuk update input kriteria di setiap opsi
+        function updateOptionCriteriaInputs(optionId) {
+            const optionCriteriaContainer = document.getElementById(`option-${optionId}-criteria`);
+            if (!optionCriteriaContainer) return;
+            
+            // Kosongkan container
+            optionCriteriaContainer.innerHTML = '';
+            
+            // Tambahkan label
+            const label = document.createElement('h6');
+            label.className = 'mt-3 mb-2';
+            label.textContent = 'Nilai untuk Setiap Kriteria:';
+            optionCriteriaContainer.appendChild(label);
+            
+            // Ambil semua kriteria
+            const criteriaCards = document.querySelectorAll('.criteria-card');
+            
+            criteriaCards.forEach((criteriaCard, index) => {
+                const criteriaName = criteriaCard.querySelector('.criteria-name').value || `Kriteria ${index + 1}`;
+                const criteriaType = criteriaCard.querySelector('.criteria-type').value;
+                const criteriaDirection = criteriaCard.querySelector('.criteria-direction').value;
+                
+                const criteriaValueRow = document.createElement('div');
+                criteriaValueRow.className = 'criteria-value-row';
+                
+                let inputHtml = '';
+                
+                if (criteriaType === 'numerik') {
+                    inputHtml = `<input type="number" class="form-control criteria-value-input" data-criteria="${criteriaCard.id}" placeholder="0">`;
+                } else if (criteriaType === 'teks') {
+                    inputHtml = `<textarea class="form-control criteria-value-input" data-criteria="${criteriaCard.id}" rows="2" placeholder="Masukkan deskripsi..."></textarea>`;
+                } else if (criteriaType === 'pilihan') {
+                    inputHtml = `
+                        <select class="form-select criteria-value-input" data-criteria="${criteriaCard.id}">
+                            <option value="">Pilih nilai</option>
+                            <option value="1">1 - Sangat Buruk</option>
+                            <option value="2">2 - Buruk</option>
+                            <option value="3">3 - Cukup</option>
+                            <option value="4">4 - Baik</option>
+                            <option value="5">5 - Sangat Baik</option>
+                        </select>
+                    `;
+                }
+                
+                const directionIcon = criteriaDirection === 'higher' ? 
+                    '<i class="bi bi-arrow-up-circle text-success"></i>' : 
+                    '<i class="bi bi-arrow-down-circle text-danger"></i>';
+                
+                const directionText = criteriaDirection === 'higher' ? 
+                    'Lebih tinggi lebih baik' : 
+                    'Lebih rendah lebih baik';
+                
+                criteriaValueRow.innerHTML = `
+                    <div class="criteria-value-label">${criteriaName}:</div>
+                    <div class="criteria-value-input">${inputHtml}</div>
+                    <div class="criteria-value-direction" title="${directionText}">${directionIcon}</div>
+                `;
+                
+                optionCriteriaContainer.appendChild(criteriaValueRow);
+            });
+        }
+        
+        // Fungsi untuk update opsi ketika kriteria baru ditambahkan
+        function updateOptionsForNewCriteria() {
+            const optionCards = document.querySelectorAll('.option-card');
+            optionCards.forEach((optionCard, index) => {
+                const optionId = parseInt(optionCard.id.split('-')[1]);
+                updateOptionCriteriaInputs(optionId);
+            });
+        }
+        
+        // Fungsi untuk update opsi ketika kriteria dihapus
+        function updateOptionsAfterCriteriaRemoved() {
+            const optionCards = document.querySelectorAll('.option-card');
+            optionCards.forEach((optionCard, index) => {
+                const optionId = parseInt(optionCard.id.split('-')[1]);
+                updateOptionCriteriaInputs(optionId);
+            });
+        }
+        
+        // Fungsi untuk menangani submit form
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            // Ambil data dari form
+            const title = document.getElementById('title').value;
+            if (!title.trim()) {
+                showToast('Judul pemilihan harus diisi', 'error');
+                return;
+            }
+            
+            // Ambil data kriteria
+            const criteria = [];
+            const criteriaCards = document.querySelectorAll('.criteria-card');
+            
+            criteriaCards.forEach(card => {
+                const name = card.querySelector('.criteria-name').value.trim();
+                const type = card.querySelector('.criteria-type').value;
+                const direction = card.querySelector('.criteria-direction').value;
+                const weight = parseInt(card.querySelector('.criteria-weight').value);
+                
+                if (name) {
+                    criteria.push({
+                        id: card.id,
+                        name,
+                        type,
+                        direction,
+                        weight
+                    });
+                }
+            });
+            
+            if (criteria.length === 0) {
+                showToast('Minimal harus ada 1 kriteria untuk penilaian', 'error');
+                return;
+            }
+            
+            // Validasi total bobot kriteria
+            const totalWeight = criteria.reduce((sum, criterion) => sum + criterion.weight, 0);
+            if (totalWeight !== 100) {
+                showToast(`Total bobot kriteria harus 100%, saat ini ${totalWeight}%`, 'error');
+                return;
+            }
+            
+            // Ambil data opsi
+            const options = [];
+            const optionCards = document.querySelectorAll('.option-card');
+            
+            optionCards.forEach(card => {
+                const name = card.querySelector('.option-name').value.trim();
+                
+                if (name) {
+                    const optionValues = {};
+                    
+                    // Ambil nilai untuk setiap kriteria
+                    criteria.forEach(criterion => {
+                        const valueInput = card.querySelector(`[data-criteria="${criterion.id}"]`);
+                        if (valueInput) {
+                            optionValues[criterion.id] = valueInput.value;
+                        }
+                    });
+                    
+                    options.push({
+                        name,
+                        values: optionValues
+                    });
+                }
+            });
+            
+            if (options.length < 2) {
+                showToast('Minimal harus ada 2 opsi untuk dibandingkan', 'error');
+                return;
+            }
+            
+            // Generate hasil perbandingan
+            generateComparison(title, criteria, options);
+            
+            // Tampilkan hasil section
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            resultsSection.classList.add('fade-in');
+            
+            // Scroll ke hasil section
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Fungsi untuk generate hasil perbandingan
+        function generateComparison(title, criteria, options) {
+            // Update judul di header hasil
+            document.querySelector('#resultsSection .card-header h4').innerHTML = `<i class="bi bi-table me-2"></i>Hasil Perbandingan: ${title}`;
+            
+            // Update header tabel untuk menambahkan kolom kriteria
+            const tableHeader = document.querySelector('#comparisonTable thead tr');
+            // Hapus semua kolom kecuali Opsi, Total Skor, dan Ranking
+            while (tableHeader.children.length > 3) {
+                tableHeader.removeChild(tableHeader.lastChild);
+            }
+            
+            // Tambahkan kolom untuk setiap kriteria
+            criteria.forEach(criterion => {
+                const th = document.createElement('th');
+                th.textContent = criterion.name;
+                th.title = `Bobot: ${criterion.weight}%, ${criterion.direction === 'higher' ? 'Lebih tinggi lebih baik' : 'Lebih rendah lebih baik'}`;
+                tableHeader.insertBefore(th, tableHeader.children[tableHeader.children.length - 2]);
+            });
+            
+            // Generate tabel perbandingan
+            const tableBody = document.getElementById('comparisonTableBody');
+            tableBody.innerHTML = '';
+            
+            // Hitung skor untuk setiap opsi
+            const scoredOptions = options.map(option => {
+                const optionScores = {};
+                let totalScore = 0;
+                
+                // Hitung skor untuk setiap kriteria
+                criteria.forEach(criterion => {
+                    const rawValue = option.values[criterion.id];
+                    let score = 0;
+                    let normalizedValue = 0;
+                    
+                    if (rawValue !== undefined && rawValue !== '') {
+                        if (criterion.type === 'numerik') {
+                            const numericValue = parseFloat(rawValue);
+                            if (!isNaN(numericValue)) {
+                                // Normalisasi nilai numerik
+                                const allValues = options.map(opt => {
+                                    const val = opt.values[criterion.id];
+                                    return val !== undefined && val !== '' ? parseFloat(val) : 0;
+                                }).filter(val => !isNaN(val));
+                                
+                                if (allValues.length > 0) {
+                                    const minValue = Math.min(...allValues);
+                                    const maxValue = Math.max(...allValues);
+                                    
+                                    if (maxValue > minValue) {
+                                        if (criterion.direction === 'higher') {
+                                            normalizedValue = (numericValue - minValue) / (maxValue - minValue);
+                                        } else {
+                                            normalizedValue = 1 - ((numericValue - minValue) / (maxValue - minValue));
+                                        }
+                                    } else {
+                                        normalizedValue = 1; // Semua nilai sama
+                                    }
+                                }
+                                
+                                score = normalizedValue * 100; // Skor 0-100
+                            }
+                        } else if (criterion.type === 'pilihan') {
+                            const choiceValue = parseInt(rawValue);
+                            if (!isNaN(choiceValue) && choiceValue >= 1 && choiceValue <= 5) {
+                                if (criterion.direction === 'higher') {
+                                    normalizedValue = (choiceValue - 1) / 4; // Normalisasi ke 0-1
+                                } else {
+                                    normalizedValue = 1 - ((choiceValue - 1) / 4); // Kebalikan
+                                }
+                                score = normalizedValue * 100; // Skor 0-100
+                            }
+                        } else if (criterion.type === 'teks') {
+                            // Untuk teks, kita berikan skor berdasarkan panjang deskripsi (bisa dikembangkan dengan NLP)
+                            const textLength = rawValue.length;
+                            const maxLength = Math.max(...options.map(opt => {
+                                const val = opt.values[criterion.id];
+                                return val !== undefined ? val.length : 0;
+                            }));
+                            
+                            if (maxLength > 0) {
+                                normalizedValue = textLength / maxLength;
+                                score = normalizedValue * 100; // Skor 0-100
+                            }
+                        }
+                    }
+                    
+                    // Hitung skor tertimbang
+                    const weightedScore = score * (criterion.weight / 100);
+                    totalScore += weightedScore;
+                    
+                    optionScores[criterion.id] = {
+                        rawValue,
+                        normalizedValue,
+                        score: Math.round(score),
+                        weightedScore: Math.round(weightedScore * 100) / 100
+                    };
+                });
+                
+                return {
+                    ...option,
+                    scores: optionScores,
+                    totalScore: Math.round(totalScore * 100) / 100
+                };
+            });
+            
+            // Urutkan berdasarkan total skor (tertinggi ke terendah)
+            scoredOptions.sort((a, b) => b.totalScore - a.totalScore);
+            
+            // Tambahkan baris ke tabel
+            scoredOptions.forEach((option, index) => {
+                const row = document.createElement('tr');
+                
+                // Tambahkan sel untuk nama opsi
+                const nameCell = document.createElement('td');
+                nameCell.innerHTML = `<strong>${option.name}</strong>`;
+                row.appendChild(nameCell);
+                
+                // Tambahkan sel untuk setiap kriteria
+                criteria.forEach(criterion => {
+                    const criterionCell = document.createElement('td');
+                    const scoreData = option.scores[criterion.id];
+                    
+                    if (scoreData) {
+                        let displayValue = scoreData.rawValue;
+                        
+                        if (criterion.type === 'numerik') {
+                            displayValue = parseFloat(scoreData.rawValue).toLocaleString('id-ID');
+                        } else if (criterion.type === 'pilihan') {
+                            const choiceLabels = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Sangat Baik'];
+                            displayValue = choiceLabels[parseInt(scoreData.rawValue)] || scoreData.rawValue;
+                        }
+                        
+                        criterionCell.innerHTML = `
+                            <div>${displayValue}</div>
+                            <div class="small text-muted">Skor: ${scoreData.score}</div>
+                        `;
+                    } else {
+                        criterionCell.textContent = '-';
+                    }
+                    
+                    row.appendChild(criterionCell);
+                });
+                
+                // Tambahkan sel untuk total skor
+                const totalScoreCell = document.createElement('td');
+                totalScoreCell.innerHTML = `<span class="badge bg-primary score-badge">${option.totalScore}</span>`;
+                row.appendChild(totalScoreCell);
+                
+                // Tambahkan sel untuk ranking
+                const rankingCell = document.createElement('td');
+                rankingCell.innerHTML = `<span class="badge bg-success">#${index + 1}</span>`;
+                row.appendChild(rankingCell);
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Generate radar chart
+            generateRadarChart(title, criteria, scoredOptions);
+            
+            // Generate kesimpulan
+            generateConclusion(title, criteria, scoredOptions);
+        }
+        
+        // Fungsi untuk generate radar chart
+        function generateRadarChart(title, criteria, options) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            // Hapus chart sebelumnya jika ada
+            if (window.comparisonRadarChart) {
+                window.comparisonRadarChart.destroy();
+            }
+            
+            // Siapkan data untuk chart
+            const labels = criteria.map(criterion => criterion.name);
+            const datasets = [];
+            
+            // Warna untuk setiap opsi
+            const colors = [
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(255, 159, 64, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 205, 86, 0.2)'
+            ];
+            
+            const borderColors = [
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 99, 132, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 159, 64, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 205, 86, 1)'
+            ];
+            
+            options.forEach((option, index) => {
+                const data = criteria.map(criterion => {
+                    const scoreData = option.scores[criterion.id];
+                    return scoreData ? scoreData.score : 0;
+                });
+                
+                datasets.push({
+                    label: option.name,
+                    data: data,
+                    backgroundColor: colors[index % colors.length],
+                    borderColor: borderColors[index % borderColors.length],
+                    borderWidth: 1,
+                    pointBackgroundColor: borderColors[index % borderColors.length]
+                });
+            });
+            
+            // Buat chart
+            window.comparisonRadarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: `Perbandingan ${title}`
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Fungsi untuk generate kesimpulan
+        function generateConclusion(title, criteria, options) {
+            const conclusionContent = document.getElementById('conclusionContent');
+            
+            // Opsi dengan skor tertinggi
+            const bestOption = options[0];
+            
+            let conclusionHTML = `
+                <p>Berdasarkan analisis perbandingan untuk <strong>${title}</strong>, kami merekomendasikan:</p>
+                <div class="text-center my-3">
+                    <span class="badge-recommended"><i class="bi bi-trophy-fill me-2"></i>${bestOption.name}</span>
+                </div>
+                <p class="mb-2"><strong>Alasan:</strong></p>
+                <ul>
+            `;
+            
+            // Temukan kriteria dengan skor tertinggi
+            const topCriteria = [];
+            criteria.forEach(criterion => {
+                const scoreData = bestOption.scores[criterion.id];
+                if (scoreData && scoreData.score >= 80) {
+                    topCriteria.push({
+                        name: criterion.name,
+                        score: scoreData.score,
+                        weight: criterion.weight
+                    });
+                }
+            });
+            
+            // Urutkan berdasarkan bobot
+            topCriteria.sort((a, b) => b.weight - a.weight);
+            
+            // Tambahkan alasan berdasarkan kriteria terbaik
+            if (topCriteria.length > 0) {
+                conclusionHTML += `<li>Unggul pada kriteria ${topCriteria[0].name} dengan skor ${topCriteria[0].score} (bobot ${topCriteria[0].weight}%)</li>`;
+                
+                if (topCriteria.length > 1) {
+                    conclusionHTML += `<li>Juga memiliki performa baik pada kriteria ${topCriteria[1].name} (skor ${topCriteria[1].score})</li>`;
+                }
+            } else {
+                // Jika tidak ada kriteria dengan skor tinggi, cari yang relatif tertinggi
+                const highestScoreCriteria = criteria.map(criterion => {
+                    const scoreData = bestOption.scores[criterion.id];
+                    return {
+                        name: criterion.name,
+                        score: scoreData ? scoreData.score : 0,
+                        weight: criterion.weight
+                    };
+                }).sort((a, b) => (b.score * b.weight) - (a.score * a.weight))[0];
+                
+                if (highestScoreCriteria) {
+                    conclusionHTML += `<li>Memiliki performa terbaik pada kriteria ${highestScoreCriteria.name} dengan skor ${highestScoreCriteria.score}</li>`;
+                }
+            }
+            
+            // Bandingkan dengan opsi kedua
+            if (options.length > 1) {
+                const secondOption = options[1];
+                const scoreDifference = bestOption.totalScore - secondOption.totalScore;
+                
+                if (scoreDifference > 10) {
+                    conclusionHTML += `<li>Mengungguli opsi kedua (${secondOption.name}) dengan selisih signifikan (${scoreDifference.toFixed(1)} poin)</li>`;
+                } else {
+                    conclusionHTML += `<li>Mengungguli opsi kedua (${secondOption.name}) meskipun selisihnya tidak terlalu besar (${scoreDifference.toFixed(1)} poin)</li>`;
+                }
+            }
+            
+            conclusionHTML += `
+                </ul>
+                <p class="mt-3 mb-0">Dengan total skor <strong>${bestOption.totalScore}</strong>, opsi ini memberikan nilai terbaik untuk kebutuhan Anda.</p>
+            `;
+            
+            conclusionContent.innerHTML = conclusionHTML;
+        }
+        
+        // Fungsi untuk export ke Excel
+        function exportToExcel() {
+            const title = document.getElementById('title').value;
+            const table = document.getElementById('comparisonTable');
+            
+            if (!table) {
+                showToast('Tidak ada data untuk diekspor', 'error');
+                return;
+            }
+            
+            // Buat workbook baru
+            const wb = XLSX.utils.book_new();
+            
+            // Ambil data dari tabel
+            const ws = XLSX.utils.table_to_sheet(table);
+            
+            // Tambahkan judul
+            XLSX.utils.sheet_add_aoa(ws, [[title]], { origin: "A1" });
+            
+            // Tambahkan sheet ke workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Perbandingan");
+            
+            // Generate file Excel
+            const fileName = `${title.replace(/\s+/g, '_')}_Perbandingan.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showToast('Berhasil mengekspor data ke Excel', 'success');
+        }
+        
+        // Fungsi untuk menampilkan toast notification
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            const toast = document.createElement('div');
+            toast.className = `custom-toast toast-${type}`;
+            
+            const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="bi ${icon}"></i>
+                </div>
+                <div class="toast-message">
+                    ${message}
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Animasi fade in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Hapus toast setelah 3 detik
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
